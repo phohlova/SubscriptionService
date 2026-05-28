@@ -30,3 +30,30 @@ logging:
   level:
     com.example.subscriptionservice: DEBUG
     org.springframework.web: DEBUG
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,beans,configprops
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+  metrics:
+    tags:
+      application: subscription-service
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# Info endpoint
+info:
+  app:
+    name: "Subscription Service"
+    description: "Service for tracking user subscriptions"
+    version: "0.0.1-SNAPSHOT"
