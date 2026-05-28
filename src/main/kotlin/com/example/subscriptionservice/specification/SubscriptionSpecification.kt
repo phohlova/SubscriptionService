@@ -1,6 +1,6 @@
 package com.example.subscriptionservice.specification
 
-import com.example.subscriptionservice.domain.Subscription
+import com.example.subscriptionservice.domain.entity.Subscription
 import com.example.subscriptionservice.domain.SubscriptionStatus
 import com.example.subscriptionservice.dto.SubscriptionFilterDto
 import jakarta.persistence.criteria.Predicate

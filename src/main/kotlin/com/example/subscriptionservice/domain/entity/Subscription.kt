@@ -1,7 +1,15 @@
-package com.example.subscriptionservice.domain
+package com.example.subscriptionservice.domain.entity
 
 import com.example.subscriptionservice.domain.SubscriptionStatus
-import jakarta.persistence.*
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.math.BigDecimal
@@ -9,6 +17,7 @@ import java.time.LocalDateTime
 
 @Entity
 @Table(name = "subscriptions")
+@JsonIgnoreProperties(ignoreUnknown = true)
 class Subscription(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,4 +52,17 @@ class Subscription(
     @UpdateTimestamp
     @Column(name = "updated_at")
     var updatedAt: LocalDateTime? = null
-)
+) {
+    protected constructor() : this(
+        id = null,
+        userId = 0,
+        serviceName = "",
+        status = SubscriptionStatus.ACTIVE,
+        startDate = LocalDateTime.MIN,
+        endDate = LocalDateTime.MIN,
+        cost = BigDecimal.ZERO,
+        autoRenew = false,
+        createdAt = null,
+        updatedAt = null
+    )
+}

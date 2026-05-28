@@ -1,6 +1,6 @@
 package com.example.subscriptionservice.repository
 
-import com.example.subscriptionservice.domain.Subscription
+import com.example.subscriptionservice.domain.entity.Subscription
 import com.example.subscriptionservice.domain.SubscriptionStatus
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable

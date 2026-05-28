@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/subscriptions")
 @Validated
 @Tag(name = "Subscriptions", description = "API для управления пользовательскими подписками")
-class SubscriptionController(
+open class SubscriptionController(
     private val subscriptionService: SubscriptionService
 ) {
 
     @PostMapping
     @Operation(summary = "Создать новую подписку", description = "Создает подписку со статусом ACTIVE")
-    fun createSubscription(
+    open fun createSubscription(
         @RequestBody @Valid request: SubscriptionRequestDto
     ): ResponseEntity<SubscriptionResponseDto> {
         val response = subscriptionService.createSubscription(request)
@@ -35,7 +35,7 @@ class SubscriptionController(
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить подписку по ID")
-    fun getSubscriptionById(
+    open fun getSubscriptionById(
         @Parameter(description = "ID подписки", example = "1")
         @PathVariable id: Long
     ): ResponseEntity<SubscriptionResponseDto> {
@@ -44,7 +44,7 @@ class SubscriptionController(
 
     @GetMapping
     @Operation(summary = "Получить список подписок с фильтрацией и пагинацией")
-    fun getAllSubscriptions(
+    open fun getAllSubscriptions(
         @ParameterObject filter: SubscriptionFilterDto,
         @Parameter(description = "Номер страницы (начиная с 0)", example = "0") @RequestParam(defaultValue = "0") page: Int,
         @Parameter(description = "Размер страницы", example = "10") @RequestParam(defaultValue = "10") size: Int,
@@ -58,7 +58,7 @@ class SubscriptionController(
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Изменить статус подписки")
-    fun updateStatus(
+    open fun updateStatus(
         @Parameter(description = "ID подписки") @PathVariable id: Long,
         @RequestBody @Valid updateDto: SubscriptionUpdateStatusDto
     ): ResponseEntity<SubscriptionResponseDto> {
@@ -67,7 +67,7 @@ class SubscriptionController(
 
     @DeleteMapping("/{id}/cancel")
     @Operation(summary = "Отменить подписку")
-    fun cancelSubscription(
+    open fun cancelSubscription(
         @Parameter(description = "ID подписки") @PathVariable id: Long
     ): ResponseEntity<SubscriptionResponseDto> {
         return ResponseEntity.ok(subscriptionService.cancelSubscription(id))
@@ -75,7 +75,7 @@ class SubscriptionController(
 
     @PatchMapping("/{id}/suspend")
     @Operation(summary = "Приостановить подписку")
-    fun suspendSubscription(
+    open fun suspendSubscription(
         @Parameter(description = "ID подписки") @PathVariable id: Long
     ): ResponseEntity<SubscriptionResponseDto> {
         return ResponseEntity.ok(subscriptionService.suspendSubscription(id))
@@ -83,9 +83,17 @@ class SubscriptionController(
 
     @GetMapping("/user/{userId}/active")
     @Operation(summary = "Получить активные подписки пользователя")
-    fun getActiveSubscriptionsByUserId(
+    open fun getActiveSubscriptionsByUserId(
         @Parameter(description = "ID пользователя") @PathVariable userId: Long
     ): ResponseEntity<List<SubscriptionResponseDto>> {
         return ResponseEntity.ok(subscriptionService.getActiveSubscriptionsByUserId(userId))
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Получить историю изменений статуса подписки")
+    open fun getSubscriptionHistory(
+        @Parameter(description = "ID подписки") @PathVariable id: Long
+    ): ResponseEntity<List<SubscriptionHistoryResponseDto>> {
+        return ResponseEntity.ok(subscriptionService.getSubscriptionHistory(id))
     }
 }

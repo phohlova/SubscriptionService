@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <changeSet id="002-create-history-table" author="developer">
+        <createTable tableName="subscription_history">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="subscription_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="old_status" type="VARCHAR(20)"/>
+            <column name="new_status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="subscription_history"
+                baseColumnNames="subscription_id"
+                referencedTableName="subscriptions"
+                referencedColumnNames="id"
+                constraintName="fk_history_subscription"/>
+
+        <createIndex tableName="subscription_history" indexName="idx_history_subscription_id">
+            <column name="subscription_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

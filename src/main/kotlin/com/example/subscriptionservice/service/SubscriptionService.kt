@@ -1,11 +1,14 @@
 package com.example.subscriptionservice.service
 
-import com.example.subscriptionservice.domain.Subscription
+import com.example.subscriptionservice.domain.entity.Subscription
 import com.example.subscriptionservice.domain.SubscriptionStatus
+import com.example.subscriptionservice.domain.entity.SubscriptionHistory
 import com.example.subscriptionservice.dto.SubscriptionFilterDto
+import com.example.subscriptionservice.dto.SubscriptionHistoryResponseDto
 import com.example.subscriptionservice.dto.SubscriptionRequestDto
 import com.example.subscriptionservice.dto.SubscriptionResponseDto
 import com.example.subscriptionservice.dto.SubscriptionUpdateStatusDto
+import com.example.subscriptionservice.repository.SubscriptionHistoryRepository
 import com.example.subscriptionservice.repository.SubscriptionRepository
 import com.example.subscriptionservice.specification.SubscriptionSpecification
 import org.springframework.data.domain.Page
@@ -16,14 +19,15 @@ import java.time.LocalDateTime
 
 @Service
 @Transactional
-class SubscriptionService(
-    private val subscriptionRepository: SubscriptionRepository
+open class SubscriptionService(
+    private val subscriptionRepository: SubscriptionRepository,
+    private val historyRepository: SubscriptionHistoryRepository
 ) {
 
     /**
      * Создание новой подписки
      */
-    fun createSubscription(dto: SubscriptionRequestDto): SubscriptionResponseDto {
+    open fun createSubscription(dto: SubscriptionRequestDto): SubscriptionResponseDto {
         val subscription = Subscription(
             userId = dto.userId,
             serviceName = dto.serviceName,
@@ -42,7 +46,7 @@ class SubscriptionService(
      * Получение подписки по ID
      */
     @Transactional(readOnly = true)
-    fun getSubscriptionById(id: Long): SubscriptionResponseDto {
+    open fun getSubscriptionById(id: Long): SubscriptionResponseDto {
         val subscription = subscriptionRepository.findById(id)
             .orElseThrow { RuntimeException("Подписка с ID $id не найдена") }
         return mapToResponse(subscription)
@@ -52,7 +56,7 @@ class SubscriptionService(
      * Получение всех подписок с фильтрами и пагинацией
      */
     @Transactional(readOnly = true)
-    fun getAllSubscriptions(
+    open fun getAllSubscriptions(
         filter: SubscriptionFilterDto,
         pageable: Pageable
     ): Page<SubscriptionResponseDto> {
@@ -65,7 +69,7 @@ class SubscriptionService(
      * Получение активных подписок пользователя
      */
     @Transactional(readOnly = true)
-    fun getActiveSubscriptionsByUserId(userId: Long): List<SubscriptionResponseDto> {
+    open fun getActiveSubscriptionsByUserId(userId: Long): List<SubscriptionResponseDto> {
         return subscriptionRepository.findActiveSubscriptionsByUserIdAndStatus(userId, SubscriptionStatus.ACTIVE)
             .map { subscription -> mapToResponse(subscription) }
     }
@@ -73,26 +77,57 @@ class SubscriptionService(
     /**
      * Обновление статуса подписки
      */
-    fun updateStatus(id: Long, dto: SubscriptionUpdateStatusDto): SubscriptionResponseDto {
+    open fun updateStatus(id: Long, dto: SubscriptionUpdateStatusDto): SubscriptionResponseDto {
         val subscription = subscriptionRepository.findById(id)
             .orElseThrow { RuntimeException("Подписка с ID $id не найдена") }
 
+        val oldStatus = subscription.status
+
         // Валидация: нельзя активировать истёкшую подписку без продления
         if (dto.status == SubscriptionStatus.ACTIVE &&
-            subscription.status == SubscriptionStatus.EXPIRED &&
+            oldStatus == SubscriptionStatus.EXPIRED &&
             subscription.endDate.isBefore(LocalDateTime.now())) {
             throw RuntimeException("Нельзя активировать истёкшую подписку без продления срока действия")
         }
 
         subscription.status = dto.status
         val updated = subscriptionRepository.save(subscription)
+
+        val historyRecord = SubscriptionHistory(
+            subscription = updated,
+            oldStatus = oldStatus,
+            newStatus = dto.status
+        )
+        historyRepository.save(historyRecord)
+
         return mapToResponse(updated)
+    }
+
+    /**
+     * Получение истории изменений подписки
+     */
+    @Transactional(readOnly = true)
+    open fun getSubscriptionHistory(id: Long): List<SubscriptionHistoryResponseDto> {
+        // Проверяем, существует ли подписка
+        if (!subscriptionRepository.existsById(id)) {
+            throw RuntimeException("Подписка с ID $id не найдена")
+        }
+        return historyRepository.findBySubscriptionIdOrderByChangedAtDesc(id)
+            .map {
+                SubscriptionHistoryResponseDto(
+                    id = it.id!!,
+                    subscriptionId = it.subscription?.id!!,
+                    oldStatus = it.oldStatus,
+                    newStatus = it.newStatus,
+                    changedAt = it.changedAt
+                )
+            }
     }
 
     /**
      * Отмена подписки
      */
-    fun cancelSubscription(id: Long): SubscriptionResponseDto {
+    open fun cancelSubscription(id: Long): SubscriptionResponseDto {
         val subscription = subscriptionRepository.findById(id)
             .orElseThrow { RuntimeException("Подписка с ID $id не найдена") }
 
@@ -104,7 +139,7 @@ class SubscriptionService(
     /**
      * Приостановка подписки
      */
-    fun suspendSubscription(id: Long): SubscriptionResponseDto {
+    open fun suspendSubscription(id: Long): SubscriptionResponseDto {
         val subscription = subscriptionRepository.findById(id)
             .orElseThrow { RuntimeException("Подписка с ID $id не найдена") }
 
@@ -116,7 +151,7 @@ class SubscriptionService(
     /**
      * Обновление истёкших подписок (для scheduler)
      */
-    fun updateExpiredSubscriptions(): Int {
+    open fun updateExpiredSubscriptions(): Int {
         val expired = subscriptionRepository.findExpiredSubscriptions(LocalDateTime.now())
         expired.forEach { subscription -> subscription.status = SubscriptionStatus.EXPIRED }
         return if (expired.isNotEmpty()) {
