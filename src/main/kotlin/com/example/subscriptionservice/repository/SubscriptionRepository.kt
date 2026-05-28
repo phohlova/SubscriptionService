@@ -22,6 +22,12 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long>, JpaSpecifi
 
     fun findByStatus(status: SubscriptionStatus, pageable: Pageable): Page<Subscription>
 
+    @Query("SELECT s FROM Subscription s WHERE s.userId = :userId AND s.status = :status")
+    fun findActiveSubscriptionsByUserIdAndStatus(
+        @Param("userId") userId: Long,
+        @Param("status") status: SubscriptionStatus
+    ): List<Subscription>
+
     @Query("SELECT s FROM Subscription s WHERE s.startDate BETWEEN :startDateFrom AND :startDateTo")
     fun findByStartDateBetween(
         @Param("startDateFrom") startDateFrom: LocalDateTime,
