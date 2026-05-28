@@ -72,7 +72,7 @@ docker-compose logs -f subscription-service
 ##  API и Документация
 
 Интерактивная документация доступна после запуска:
-👉 **Swagger UI**: http://localhost:8080/swagger-ui.html
+ **Swagger UI**: http://localhost:8080/swagger-ui.html
 
 Пример запроса на создание подписки:
 ```bash
@@ -88,7 +88,7 @@ curl -X POST http://localhost:8080/api/subscriptions \
   }'
 ```
 
-## 📊 Мониторинг (Actuator)
+## Мониторинг (Actuator)
 
 | Endpoint | Описание |
 |----------|----------|
@@ -102,7 +102,7 @@ curl -X POST http://localhost:8080/api/subscriptions \
 curl http://localhost:8080/actuator/health
 ```
 
-## 🧪 Тестирование
+##  Тестирование
 
 Запуск всех тестов:
 ```bash
